@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Keyboard for Vital</title>
+    <style>
+        body { text-align: center; background: #222; color: white; font-family: sans-serif; }
+        .key { display: inline-block; width: 60px; height: 120px; margin: 5px; background: white; color: black; font-size: 24px; line-height: 120px; cursor: pointer; border-radius: 5px; }
+        .key:active { background: lightgray; }
+        select, button { margin: 10px; padding: 10px; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <h1>Touch Keys to Play in Vital</h1>
+
+    <!-- MIDI File Selection -->
+    <h3>Play a MIDI File:</h3>
+    <select id="midiSelect">
+        {% for file in midi_files %}
+        <option value="{{ file }}">{{ file }}</option>
+        {% endfor %}
+    </select>
+    <button onclick="playMidi()">Play</button>
+
+    <div id="keyboard">
+        <div class="key" data-key="a">C</div>
+        <div class="key" data-key="s">D</div>
+        <div class="key" data-key="d">E</div>
+        <div class="key" data-key="f">F</div>
+        <div class="key" data-key="g">G</div>
+        <div class="key" data-key="h">A</div>
+        <div class="key" data-key="j">B</div>
+        <div class="key" data-key="k">C</div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.key').forEach(key => {
+            key.addEventListener('touchstart', () => {
+                fetch('/press', { method: 'POST', body: new URLSearchParams({ key: key.dataset.key }) });
+            });
+            key.addEventListener('touchend', () => {
+                fetch('/release', { method: 'POST', body: new URLSearchParams({ key: key.dataset.key }) });
+            });
+        });
+
+        function playMidi() {
+            let filename = document.getElementById('midiSelect').value;
+            fetch('/play_midi', {
+                method: 'POST',
+                body: new URLSearchParams({ filename: filename }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }).then(response => response.json())
+              .then(data => alert(data.message || data.error));
+        }
+    </script>
+</body>
+</html>
